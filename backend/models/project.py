@@ -28,6 +28,8 @@ class Project(db.Model):
                            cascade='all, delete-orphan', order_by='Page.order_index')
     tasks = db.relationship('Task', back_populates='project', lazy='dynamic',
                            cascade='all, delete-orphan')
+    materials = db.relationship('Material', back_populates='project', lazy='dynamic',
+                           cascade='all, delete-orphan')
     
     def to_dict(self, include_pages=False):
         """Convert to dictionary"""

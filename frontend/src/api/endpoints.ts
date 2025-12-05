@@ -384,6 +384,86 @@ export const generateMaterialImage = async (
   return response.data;
 };
 
+/**
+ * 素材信息接口
+ */
+export interface Material {
+  id: string;
+  project_id?: string | null;
+  filename: string;
+  url: string;
+  relative_path: string;
+  created_at: string;
+  // 可选的附加信息：用于展示友好名称
+  prompt?: string;
+  original_filename?: string;
+  source_filename?: string;
+  name?: string;
+}
+
+/**
+ * 获取素材列表
+ * @param projectId 项目ID，可选
+ *   - If provided and not 'all' or 'none': Get materials for specific project via /api/projects/{projectId}/materials
+ *   - If 'all': Get all materials via /api/materials?project_id=all
+ *   - If 'none': Get global materials (not bound to any project) via /api/materials?project_id=none
+ *   - If not provided: Get all materials via /api/materials
+ */
+export const listMaterials = async (
+  projectId?: string
+): Promise<ApiResponse<{ materials: Material[]; count: number }>> => {
+  let url: string;
+  
+  if (!projectId || projectId === 'all') {
+    // Get all materials using global endpoint
+    url = '/api/materials?project_id=all';
+  } else if (projectId === 'none') {
+    // Get global materials (not bound to any project)
+    url = '/api/materials?project_id=none';
+  } else {
+    // Get materials for specific project
+    url = `/api/projects/${projectId}/materials`;
+  }
+  
+  const response = await apiClient.get<ApiResponse<{ materials: Material[]; count: number }>>(url);
+  return response.data;
+};
+
+/**
+ * 上传素材图片
+ * @param file 图片文件
+ * @param projectId 可选的项目ID
+ *   - If provided: Upload material bound to the project
+ *   - If not provided or 'none': Upload as global material (not bound to any project)
+ */
+export const uploadMaterial = async (
+  file: File,
+  projectId?: string | null
+): Promise<ApiResponse<Material>> => {
+  const formData = new FormData();
+  formData.append('file', file);
+  
+  let url: string;
+  if (!projectId || projectId === 'none') {
+    // Use global upload endpoint for materials not bound to any project
+    url = '/api/materials/upload';
+  } else {
+    // Use project-specific upload endpoint
+    url = `/api/projects/${projectId}/materials/upload`;
+  }
+  
+  const response = await apiClient.post<ApiResponse<Material>>(url, formData);
+  return response.data;
+};
+
+/**
+ * 删除素材
+ */
+export const deleteMaterial = async (materialId: string): Promise<ApiResponse<{ id: string }>> => {
+  const response = await apiClient.delete<ApiResponse<{ id: string }>>(`/api/materials/${materialId}`);
+  return response.data;
+};
+
 // ===== 用户模板 =====
 
 export interface UserTemplate {

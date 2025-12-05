@@ -2,7 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Sparkles, FileText, FileEdit, ImagePlus } from 'lucide-react';
 import { Button, Textarea, Card, useToast, MaterialGeneratorModal } from '@/components/shared';
-import { TemplateSelector } from '@/components/shared/TemplateSelector';
+import { TemplateSelector, getTemplateFile } from '@/components/shared/TemplateSelector';
+import { listUserTemplates, type UserTemplate } from '@/api/endpoints';
 import { useProjectStore } from '@/store/useProjectStore';
 
 type CreationType = 'idea' | 'outline' | 'description';
@@ -19,20 +20,29 @@ export const Home: React.FC = () => {
   const [selectedPresetTemplateId, setSelectedPresetTemplateId] = useState<string | null>(null);
   const [isMaterialModalOpen, setIsMaterialModalOpen] = useState(false);
   const [currentProjectId, setCurrentProjectId] = useState<string | null>(null);
+  const [userTemplates, setUserTemplates] = useState<UserTemplate[]>([]);
 
-  // 检查是否有当前项目
+  // 检查是否有当前项目 & 加载用户模板
   useEffect(() => {
     const projectId = localStorage.getItem('currentProjectId');
     setCurrentProjectId(projectId);
+    
+    // 加载用户模板列表（用于按需获取File）
+    const loadTemplates = async () => {
+      try {
+        const response = await listUserTemplates();
+        if (response.data?.templates) {
+          setUserTemplates(response.data.templates);
+        }
+      } catch (error) {
+        console.error('加载用户模板失败:', error);
+      }
+    };
+    loadTemplates();
   }, []);
 
   const handleOpenMaterialModal = () => {
-    const projectId = localStorage.getItem('currentProjectId');
-    if (!projectId) {
-      show({ message: '请先创建一个项目', type: 'info' });
-      return;
-    }
-    setCurrentProjectId(projectId);
+    // 在主页始终生成全局素材，不关联任何项目
     setIsMaterialModalOpen(true);
   };
 
@@ -92,8 +102,16 @@ export const Home: React.FC = () => {
     }
 
     try {
-      // TemplateSelector 已经处理了模板选择，selectedTemplate 应该已经包含文件
-      await initializeProject(activeTab, content, selectedTemplate || undefined);
+      // 如果有模板ID但没有File，按需加载
+      let templateFile = selectedTemplate;
+      if (!templateFile && (selectedTemplateId || selectedPresetTemplateId)) {
+        const templateId = selectedTemplateId || selectedPresetTemplateId;
+        if (templateId) {
+          templateFile = await getTemplateFile(templateId, userTemplates);
+        }
+      }
+      
+      await initializeProject(activeTab, content, templateFile || undefined);
       
       // 根据类型跳转到不同页面
       const projectId = localStorage.getItem('currentProjectId');
@@ -221,14 +239,12 @@ export const Home: React.FC = () => {
         </Card>
       </main>
       <ToastContainer />
-      {/* 素材生成模态 */}
-      {currentProjectId && (
-        <MaterialGeneratorModal
-          projectId={currentProjectId}
-          isOpen={isMaterialModalOpen}
-          onClose={() => setIsMaterialModalOpen(false)}
-        />
-      )}
+      {/* 素材生成模态 - 在主页始终生成全局素材 */}
+      <MaterialGeneratorModal
+        projectId={null}
+        isOpen={isMaterialModalOpen}
+        onClose={() => setIsMaterialModalOpen(false)}
+      />
     </div>
   );
 };

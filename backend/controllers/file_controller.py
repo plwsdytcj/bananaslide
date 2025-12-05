@@ -4,6 +4,7 @@ File Controller - handles static file serving
 from flask import Blueprint, send_from_directory, current_app
 from utils import error_response, not_found
 import os
+from werkzeug.utils import secure_filename
 
 file_bp = Blueprint('files', __name__, url_prefix='/files')
 
@@ -73,6 +74,38 @@ def serve_user_template(template_id, filename):
         
         # Serve file
         return send_from_directory(file_dir, filename)
+    
+    except Exception as e:
+        return error_response('SERVER_ERROR', str(e), 500)
+
+
+@file_bp.route('/materials/<filename>', methods=['GET'])
+def serve_global_material(filename):
+    """
+    GET /files/materials/{filename} - Serve global material files (not bound to a project)
+    
+    Args:
+        filename: File name
+    """
+    try:
+        safe_filename = secure_filename(filename)
+        # Construct file path
+        file_dir = os.path.join(
+            current_app.config['UPLOAD_FOLDER'],
+            'materials'
+        )
+        
+        # Check if directory exists
+        if not os.path.exists(file_dir):
+            return not_found('File')
+        
+        # Check if file exists
+        file_path = os.path.join(file_dir, safe_filename)
+        if not os.path.exists(file_path):
+            return not_found('File')
+        
+        # Serve file
+        return send_from_directory(file_dir, safe_filename)
     
     except Exception as e:
         return error_response('SERVER_ERROR', str(e), 500)
