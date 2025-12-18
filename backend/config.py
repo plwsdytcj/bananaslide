@@ -51,6 +51,8 @@ class Config:
     # OpenAI 格式专用配置（当 AI_PROVIDER_FORMAT=openai 时使用）
     OPENAI_API_KEY = os.getenv('OPENAI_API_KEY', '')  # 当 AI_PROVIDER_FORMAT=openai 时必须设置
     OPENAI_API_BASE = os.getenv('OPENAI_API_BASE', 'https://aihubmix.com/v1')
+    OPENAI_TIMEOUT = float(os.getenv('OPENAI_TIMEOUT', '60.0'))
+    OPENAI_MAX_RETRIES = int(os.getenv('OPENAI_MAX_RETRIES', '3'))
     
     # AI 模型配置
     TEXT_MODEL = os.getenv('TEXT_MODEL', 'gemini-3-flash-preview')
