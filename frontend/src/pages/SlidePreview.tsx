@@ -739,7 +739,7 @@ export const SlidePreview: React.FC = () => {
                   onClick={() => handleExport('editable-pptx')}
                   className="w-full px-4 py-2 text-left hover:bg-gray-50 transition-colors text-sm"
                 >
-                  导出可编辑 PPTX
+                  导出可编辑 PPTX（不稳定测试版）
                 </button>
                 <button
                   onClick={() => handleExport('pdf')}
