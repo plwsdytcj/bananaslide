@@ -68,6 +68,12 @@ RUN mkdir -p /etc/nginx/templates && echo 'server { \n\
         proxy_set_header X-Real-IP $remote_addr; \n\
     } \n\
     \n\
+    location /files { \n\
+        proxy_pass http://127.0.0.1:5001; \n\
+        proxy_set_header Host $host; \n\
+        proxy_set_header X-Real-IP $remote_addr; \n\
+    } \n\
+    \n\
     location /health { \n\
         proxy_pass http://127.0.0.1:5001; \n\
     } \n\
