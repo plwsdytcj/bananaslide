@@ -63,13 +63,13 @@ RUN mkdir -p /etc/nginx/templates && echo 'server { \n\
     } \n\
     \n\
     location /api { \n\
-        proxy_pass http://127.0.0.1:5000; \n\
+        proxy_pass http://127.0.0.1:5001; \n\
         proxy_set_header Host $host; \n\
         proxy_set_header X-Real-IP $remote_addr; \n\
     } \n\
     \n\
     location /health { \n\
-        proxy_pass http://127.0.0.1:5000; \n\
+        proxy_pass http://127.0.0.1:5001; \n\
     } \n\
 }' > /etc/nginx/templates/default.conf.template
 
@@ -78,12 +78,13 @@ RUN rm -f /etc/nginx/sites-enabled/default /etc/nginx/conf.d/default.conf
 
 ENV PYTHONPATH=/app
 ENV FLASK_APP=backend/app.py
+ENV IN_DOCKER=1
 ENV PORT=10000
 
 EXPOSE 10000
 
-HEALTHCHECK --interval=30s --timeout=10s --start-period=10s --retries=3 \
-    CMD curl -f http://localhost:${PORT}/health || exit 1
+HEALTHCHECK --interval=30s --timeout=10s --start-period=15s --retries=3 \
+    CMD curl -f http://localhost:5001/health || exit 1
 
 # Start: substitute PORT in nginx config, run migrations, start backend, start nginx
 CMD sh -c "\
